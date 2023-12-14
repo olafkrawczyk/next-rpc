@@ -19,8 +19,16 @@ export default function Home() {
   const { localStream, remoteStream, startCall } = useVideo();
 
   useEffect(() => {
-    localVideoRef.current!.srcObject = localStream;
-    remoteVideoRef.current!.srcObject = remoteStream;
+    if (
+      !localStream ||
+      !remoteStream ||
+      !localVideoRef.current ||
+      !remoteVideoRef.current
+    )
+      return;
+
+    localVideoRef.current.srcObject = localStream;
+    remoteVideoRef.current.srcObject = remoteStream;
   }, [localStream, remoteStream]);
 
   return (

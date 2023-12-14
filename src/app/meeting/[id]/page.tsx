@@ -14,11 +14,18 @@ import { useEffect, useRef, useState } from "react";
 export default function Meeting({ params }: { params: { id: string } }) {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
-  const [code, setCode] = useState("");
 
   const { localStream, remoteStream, answerCall } = useVideo();
 
   useEffect(() => {
+    if (
+      !localStream ||
+      !remoteStream ||
+      !localVideoRef.current ||
+      !remoteVideoRef.current
+    )
+      return;
+
     localVideoRef.current!.srcObject = localStream;
     remoteVideoRef.current!.srcObject = remoteStream;
   }, [localStream, remoteStream]);

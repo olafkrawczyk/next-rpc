@@ -1,4 +1,4 @@
-// "use client-only";
+"use client";
 import { useContext, useEffect, useState } from "react";
 
 import {
@@ -23,16 +23,9 @@ const rtcConfig: RTCConfiguration = {
 export const useVideo = () => {
   const { firestore } = useContext(FirebaseContext);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream] = useState<MediaStream>(new MediaStream());
-  const [peerConnection] = useState(new RTCPeerConnection(rtcConfig));
-
-  useEffect(() => {
-    peerConnection!.ontrack = (event) => {
-      event.streams[0].getTracks().forEach((track) => {
-        remoteStream?.addTrack(track);
-      });
-    };
-  }, []);
+  const [remoteStream, setRemoteStream] = useState<MediaStream>();
+  const [peerConnection, setPeerConnection] =
+    useState<RTCPeerConnection | null>(null);
 
   const getLocalStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -42,6 +35,7 @@ export const useVideo = () => {
       audio: false,
     });
     setLocalStream(stream);
+
     if (peerConnection) {
       stream.getTracks().forEach((track) => {
         peerConnection.addTrack(track, stream);
@@ -50,24 +44,36 @@ export const useVideo = () => {
   };
 
   useEffect(() => {
-    getLocalStream();
+    const pc = new RTCPeerConnection(rtcConfig);
+    setPeerConnection(pc);
   }, []);
 
+  useEffect(() => {
+    if (!peerConnection) return;
+    peerConnection.ontrack = (event) => {
+      event.streams[0].getTracks().forEach((track) => {
+        remoteStream?.addTrack(track);
+      });
+    };
+    setRemoteStream(new MediaStream());
+    getLocalStream();
+  }, [peerConnection]);
+
   const startCall = async () => {
-    if (!localStream) {
-      await getLocalStream();
-    }
-    const callsRef = collection(firestore!, "calls");
+    if (!firestore || !peerConnection) return;
+
+    const callsRef = collection(firestore, "calls");
     const callDoc = doc(callsRef);
     const offerCandidates = collection(callDoc, "offerCandidates");
     const anwserCandidates = collection(callDoc, "answerCandidates");
-    peerConnection!.onicecandidate = async (event) => {
+
+    peerConnection.onicecandidate = async (event) => {
       event.candidate &&
         (await setDoc(doc(offerCandidates), event.candidate.toJSON()));
     };
 
-    const offerDescription = await peerConnection!.createOffer();
-    await peerConnection!.setLocalDescription(offerDescription);
+    const offerDescription = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offerDescription);
 
     const offer = {
       sdp: offerDescription.sdp,
@@ -77,9 +83,9 @@ export const useVideo = () => {
 
     onSnapshot(callDoc, (snapshot) => {
       const data = snapshot.data();
-      if (!peerConnection!.currentRemoteDescription && data?.answer) {
+      if (!peerConnection.currentRemoteDescription && data?.answer) {
         const answerDescription = new RTCSessionDescription(data.answer);
-        peerConnection!.setRemoteDescription(answerDescription);
+        peerConnection.setRemoteDescription(answerDescription);
       }
     });
 
@@ -87,7 +93,7 @@ export const useVideo = () => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           const candidate = new RTCIceCandidate(change.doc.data());
-          peerConnection!.addIceCandidate(candidate);
+          peerConnection.addIceCandidate(candidate);
         }
       });
     });
@@ -96,18 +102,21 @@ export const useVideo = () => {
   };
 
   const answerCall = async (callId: string) => {
-    const callsRef = collection(firestore!, "calls");
+    if (!firestore || !peerConnection) return;
+
+    const callsRef = collection(firestore, "calls");
     const callDoc = doc(callsRef, callId);
     const offerCandidates = collection(callDoc, "offerCandidates");
     const anwserCandidates = collection(callDoc, "answerCandidates");
-    peerConnection!.onicecandidate = async (event) => {
+
+    peerConnection.onicecandidate = async (event) => {
       event.candidate &&
         (await setDoc(doc(anwserCandidates), event.candidate.toJSON()));
     };
 
     const callData = (await getDoc(callDoc)).data();
     const offerDescription = callData?.offer;
-    await peerConnection!.setRemoteDescription(
+    await peerConnection.setRemoteDescription(
       new RTCSessionDescription(offerDescription)
     );
 
@@ -125,7 +134,7 @@ export const useVideo = () => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
           const data = change.doc.data();
-          peerConnection!.addIceCandidate(new RTCIceCandidate(data));
+          peerConnection.addIceCandidate(new RTCIceCandidate(data));
         }
       });
     });
