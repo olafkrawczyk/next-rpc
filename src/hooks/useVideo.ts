@@ -46,6 +46,7 @@ export const useVideo = () => {
   useEffect(() => {
     const pc = new RTCPeerConnection(rtcConfig);
     setPeerConnection(pc);
+    setRemoteStream(new MediaStream());
   }, []);
 
   useEffect(() => {
@@ -55,9 +56,8 @@ export const useVideo = () => {
         remoteStream?.addTrack(track);
       });
     };
-    setRemoteStream(new MediaStream());
     getLocalStream();
-  }, [peerConnection]);
+  }, [peerConnection, remoteStream]);
 
   const startCall = async () => {
     if (!firestore || !peerConnection) return;
@@ -104,6 +104,7 @@ export const useVideo = () => {
   const answerCall = async (callId: string) => {
     if (!firestore || !peerConnection) return;
 
+    console.log("answerCall");
     const callsRef = collection(firestore, "calls");
     const callDoc = doc(callsRef, callId);
     const offerCandidates = collection(callDoc, "offerCandidates");

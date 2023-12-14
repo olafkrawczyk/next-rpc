@@ -28,7 +28,7 @@ export default function Meeting({ params }: { params: { id: string } }) {
 
     localVideoRef.current!.srcObject = localStream;
     remoteVideoRef.current!.srcObject = remoteStream;
-  }, [localStream, remoteStream]);
+  }, [localStream, remoteStream, answerCall, localVideoRef, remoteVideoRef]);
 
   return (
     <Stack>

@@ -29,7 +29,7 @@ export default function Home() {
 
     localVideoRef.current.srcObject = localStream;
     remoteVideoRef.current.srcObject = remoteStream;
-  }, [localStream, remoteStream]);
+  }, [localStream, remoteStream, startCall, localVideoRef, remoteVideoRef]);
 
   return (
     <Stack direction="column" alignItems="center" justifyContent="center">
