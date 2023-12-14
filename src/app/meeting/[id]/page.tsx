@@ -11,12 +11,12 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 
-export default function Home() {
+export default function Meeting({ params }: { params: { id: string } }) {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
-  const [generatedCode, setGeneratedCode] = useState("");
+  const [code, setCode] = useState("");
 
-  const { localStream, remoteStream, startCall } = useVideo();
+  const { localStream, remoteStream, answerCall } = useVideo();
 
   useEffect(() => {
     localVideoRef.current!.srcObject = localStream;
@@ -24,38 +24,31 @@ export default function Home() {
   }, [localStream, remoteStream]);
 
   return (
-    <Stack direction="column" alignItems="center" justifyContent="center">
+    <Stack>
       <Heading>Video Chat</Heading>
       <HStack sx={{ w: "100%", p: 10 }}>
-        <VStack sx={{ flex: 0.5 }}>
-          <Heading>Local</Heading>
-          <video autoPlay playsInline muted ref={localVideoRef} />
-        </VStack>
         <VStack sx={{ flex: 0.5 }}>
           <Heading>Remote</Heading>
           <video autoPlay playsInline ref={remoteVideoRef} />
         </VStack>
+        <VStack sx={{ flex: 0.5 }}>
+          <Heading>Local</Heading>
+          <video autoPlay playsInline muted ref={localVideoRef} />
+        </VStack>
       </HStack>
-      <VStack
-        sx={{ w: "50%", p: 10 }}
+      <HStack
+        sx={{ w: "100%", p: 10 }}
         alignItems="center"
         justifyContent="center"
       >
-        <Input
-          name="code"
-          placeholder="Enter code"
-          disabled
-          value={generatedCode}
-        />
         <Button
           onClick={async () => {
-            const code = await startCall();
-            setGeneratedCode(`${window.location.href}meeting/${code}`);
+            await answerCall(params.id);
           }}
         >
-          Start call
+          Join
         </Button>
-      </VStack>
+      </HStack>
     </Stack>
   );
 }
