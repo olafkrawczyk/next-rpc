@@ -104,7 +104,6 @@ export const useVideo = () => {
   const answerCall = async (callId: string) => {
     if (!firestore || !peerConnection) return;
 
-    console.log("answerCall");
     const callsRef = collection(firestore, "calls");
     const callDoc = doc(callsRef, callId);
     const offerCandidates = collection(callDoc, "offerCandidates");

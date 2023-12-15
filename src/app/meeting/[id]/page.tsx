@@ -35,12 +35,12 @@ export default function Meeting({ params }: { params: { id: string } }) {
       <Heading>Video Chat</Heading>
       <HStack sx={{ w: "100%", p: 10 }}>
         <VStack sx={{ flex: 0.5 }}>
-          <Heading>Remote</Heading>
-          <video autoPlay playsInline ref={remoteVideoRef} />
-        </VStack>
-        <VStack sx={{ flex: 0.5 }}>
           <Heading>Local</Heading>
           <video autoPlay playsInline muted ref={localVideoRef} />
+        </VStack>
+        <VStack sx={{ flex: 0.5 }}>
+          <Heading>Remote</Heading>
+          <video autoPlay playsInline ref={remoteVideoRef} />
         </VStack>
       </HStack>
       <HStack
